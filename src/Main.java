@@ -1,3 +1,7 @@
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import static java.lang.System.exit;
 
 public class Main {
@@ -5,9 +9,6 @@ public class Main {
     private static final int LIMITEX2 = 100;
     private static final int LIMITEX3 = 1000;
     private static final Object lock = new Object();
-
-    private static Result resultEx4;
-    private static Result resultEx5;
 
     public static void main(String[] args) {
 
@@ -32,14 +33,28 @@ public class Main {
             Thread.sleep(1000);
             System.out.println("\n");
 
+            int size = 1200;
+
+            int[][] matrix1 = new int[size][size];
+            int[][] matrix2 = new int[size][size];
+
+            Random random = new Random();
+
+            for (int i = 0; i < size; i++) {
+                for (int j = 0; j < size; j++) {
+                    matrix1[i][j] = random.nextInt() % 100;
+                    matrix2[i][j] = random.nextInt() % 100;
+                }
+            }
+
             long start = System.currentTimeMillis();
-            ex4();
+            ex4(matrix1, matrix2);
             long spent = System.currentTimeMillis() - start;
             Thread.sleep(1000);
             System.out.println("Spent alg1 : " + spent + " ms\n");
 
             start = System.currentTimeMillis();
-            ex5();
+            ex5(matrix1, matrix2);
             spent = System.currentTimeMillis() - start;
             Thread.sleep(1000);
             System.out.println("Spent alg2 : " + spent + " ms\n");
@@ -49,7 +64,6 @@ public class Main {
         }
 
         exit(0);
-
 
     }
 
@@ -61,7 +75,7 @@ public class Main {
         try {
             for (String s : sentence) {
                 System.out.print(s);
-                Thread.sleep(1);    //TODO: change on 1000
+                Thread.sleep(1000);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -221,83 +235,38 @@ public class Main {
         thread2.start();
     }
 
-    private static void ex4() {
-
-        int[][] matrix1 = {
-                {20, 10},
-                {3, -2}
-        };
-
-        int[][] matrix2 = {
-                {8, 7},
-                {5, 4}
-        };
+    private static void ex4(int[][] matrix1, int[][] matrix2) {
 
         if (matrix1[0].length == matrix2.length) {
 
             int[][] resultMatrix = new int[matrix1.length][matrix2[0].length];
             LinearMultiplicationThreadWorker[][] threads =
                     new LinearMultiplicationThreadWorker[resultMatrix.length][resultMatrix[0].length];
-
             for (int i = 0; i < resultMatrix.length; i++) {
+                ExecutorService executorService = Executors.newCachedThreadPool();
                 for (int j = 0; j < resultMatrix[0].length; j++) {
                     threads[i][j] = new LinearMultiplicationThreadWorker(i, j, matrix1, matrix2, resultMatrix);
-                    threads[i][j].start();
+                    executorService.execute(threads[i][j]);
                 }
+                executorService.shutdown();
             }
 
-            resultEx4 = new Result(resultMatrix);
+            Result resultEx4 = new Result(resultMatrix);
         } else {
             System.out.println("Wrong input");
         }
 
     }
 
-    private static void ex5() {
+    private static void ex5(int[][] matrix1, int[][] matrix2) {
 
-        int[][] matrix1 = {
-                {20, 10},
-                {3, -2}
-        };
+        Fox fox = new Fox();
 
-        int[][] matrix2 = {
-                {8, 7},
-                {5, 4}
-        };
+        int multiplicationThreadWorker[][] = fox.FoxMultiplicationThreadWorker(matrix1, matrix2);
 
-        // print the matrix A and B
-        System.out.println("Matrix A:");
-        for (int i = 0; i < matrix1.length; i++) {
-            for (int j = 0; j < matrix1[0].length; j++) {
-                System.out.print(matrix1[i][j] + " ");
-            }
-            System.out.println();
-        }
+        Result resultEx5 = new Result(multiplicationThreadWorker);
 
-        System.out.println("Matrix B:");
-        for (int i = 0; i < matrix2.length; i++) {
-            for (int j = 0; j < matrix2[0].length; j++) {
-                System.out.print(matrix2[i][j] + " ");
-            }
-            System.out.println();
-        }
     }
 
-//    // print result
-//        obj.print(resultNormal,loop);
-//
-//    // Merge the matrix in Blocks and multiplies
-//    Block obj2 = new Block();
-//    int resultBlock[][] = obj2.MultiplicaBlock(loop, A, B);
-//
-//    // print result
-//        obj.print(resultBlock,loop);
-//
-//    // Merge the matrix in Blocks and multiplies with Threads
-//    int resultBlockThread[][] = obj2.MultiplicaBlockThread(loop, A, B);
-//
-//    // print result
-//        obj.print(resultBlockThread,loop);
-//}
 
 }
